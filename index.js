@@ -49,7 +49,7 @@ exports.connect = function(port, cb) {
 	var client = rpc();
 	client.pipe(stream).pipe(client);
 
-	var clientApi = client.wrap(api);
+	var clientApi = client.wrap(api.names);
 	clientApi._port = port;
 	
 	cb(null, clientApi, stream);
@@ -59,7 +59,7 @@ exports.createServer = function(opts, cb) {
 	prepOpts(opts);
 
 	// Create server
-	var server = net.createServer(rpcServer);
+	var server = net.createServer(rpcServer(opts));
 
 	// Find an open port
 	var port = randomPort();
@@ -87,7 +87,10 @@ exports.createServer = function(opts, cb) {
 	}
 };
 
-function rpcServer(stream) {
-	var server = rpc(api);
-	server.pipe(stream).pipe(server);
+function rpcServer(opts) {
+	var apiInst = api.create(opts);
+	return function (stream) {
+		var server = rpc(apiInst);
+		server.pipe(stream).pipe(server);
+	}
 }

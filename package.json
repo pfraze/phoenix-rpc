@@ -10,7 +10,8 @@
     "bytewise": "~0.7.0",
     "pull-level": "~1.1.10",
     "pull-stream-to-stream": "~1.3.0",
-    "rpc-stream": "~2.1.1"
+    "rpc-stream": "~2.1.1",
+    "proquint-": "~1.1.0"
   },
   "devDependencies": {
     "deep-equal": "^0.2.1",
