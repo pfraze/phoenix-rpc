@@ -1,8 +1,10 @@
-var path = require('path');
-var fs   = require('fs');
-var net  = require('net');
-var rpc  = require('rpc-stream');
-var api  = require('./lib/rpc-api');
+var path     = require('path');
+var fs       = require('fs');
+var net      = require('net');
+var rpc      = require('rpc-stream');
+var MuxDemux = require('mux-demux')
+var api      = require('./lib/rpc-api');
+var debug    = require('./lib/debug');
 
 function prepOpts(opts) {
 	if (!opts) throw "opts are required";
@@ -45,13 +47,19 @@ exports.createServerOrConnect = function(opts, cb) {
 };
 
 exports.connect = function(port, cb) {
+	// Create stream
 	var stream = net.connect(port);
-	var client = rpc();
-	client.pipe(stream).pipe(client);
 
-	var clientApi = client.wrap(api.names);
+	// Pipe into mux-demux
+	var mx = MuxDemux();
+	stream.pipe(mx).pipe(stream);
+
+	// Create the rpc substream
+	debug.logMX('client, creating rpc substream over muxdemux');
+	var clientApi = api.createClient(rpc());
+	clientApi.pipe(mx.createStream('rpc')).pipe(clientApi);
 	clientApi._port = port;
-	
+	clientApi._mx = mx;
 	cb(null, clientApi, stream);
 };
 
@@ -59,8 +67,25 @@ exports.createServer = function(opts, cb) {
 	prepOpts(opts);
 
 	// Create server
-	var apiInst = api.create(opts);;
-	var server = net.createServer(rpcServer(apiInst));
+	var serverApi = api.createServer(opts);
+	var server = net.createServer(function (s) {
+		// Pipe into mux-demux
+		var mx = MuxDemux();
+		s.pipe(mx).pipe(s);
+
+		// Handle new substreams
+		mx.on('connection', function(stream) {
+			if (stream.meta == 'rpc') {
+				// RPC substream
+				debug.logMX('server, received rpc substream over muxdemux');
+				var rpcstream = rpc(serverApi);
+				rpcstream.pipe(stream).pipe(rpcstream);
+			} else {
+				// Others
+				serverApi.onStream(stream);
+			}
+		});
+	});
 
 	// Find an open port
 	var port = randomPort();
@@ -80,19 +105,13 @@ exports.createServer = function(opts, cb) {
 			server.listen(port);
 		}
 	});
-	server.cleanup = function(cb) {
-		fs.unlinkSync(opts.portfile);
-	};
 	server.listen(port, 'localhost');
-
 	function randomPort() {
 		return 64001 + Math.ceil(Math.random() * 998);
 	}
-};
 
-function rpcServer(apiInst) {
-	return function (stream) {
-		var server = rpc(apiInst);
-		server.pipe(stream).pipe(server);
-	}
-}
+	// Helper function, should be called on parent process' exit
+	server.cleanup = function(cb) {
+		fs.unlinkSync(opts.portfile);
+	};
+};
