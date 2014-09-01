@@ -3,7 +3,7 @@ var tape = require('tape');
 var fs = require('fs');
 var path = require('path');
 
-function clearKeyfile(opts) {
+function clearDatadir(opts) {
 	try {
 		fs.unlinkSync(path.join(opts.datadir, 'secret.name'));
 		console.log('Deleted old keys');
@@ -14,7 +14,7 @@ module.exports = function(opts) {
 	tape('create', function(t) {
 		var phoenixRpc = require('../');
 		
-		clearKeyfile(opts);
+		clearDatadir(opts);
 
 		phoenixRpc.createServerOrConnect(opts, function(err, client, stream) {
 			if (err) throw err;
@@ -54,7 +54,7 @@ module.exports = function(opts) {
 	tape('get', function(t) {
 		var phoenixRpc = require('../');
 		
-		clearKeyfile(opts);
+		clearDatadir(opts);
 
 		phoenixRpc.createServerOrConnect(opts, function(err, client, stream) {
 			if (err) throw err;

@@ -59,7 +59,8 @@ exports.createServer = function(opts, cb) {
 	prepOpts(opts);
 
 	// Create server
-	var server = net.createServer(rpcServer(opts));
+	var apiInst = api.create(opts);;
+	var server = net.createServer(rpcServer(apiInst));
 
 	// Find an open port
 	var port = randomPort();
@@ -79,7 +80,9 @@ exports.createServer = function(opts, cb) {
 			server.listen(port);
 		}
 	});
-	server.cleanup = fs.unlinkSync.bind(fs, opts.portfile);
+	server.cleanup = function(cb) {
+		fs.unlinkSync(opts.portfile);
+	};
 	server.listen(port, 'localhost');
 
 	function randomPort() {
@@ -87,8 +90,7 @@ exports.createServer = function(opts, cb) {
 	}
 };
 
-function rpcServer(opts) {
-	var apiInst = api.create(opts);
+function rpcServer(apiInst) {
 	return function (stream) {
 		var server = rpc(apiInst);
 		server.pipe(stream).pipe(server);
