@@ -39,6 +39,11 @@ exports.createServerOrConnect = function(opts, cb) {
 				exports.connect(port, function(err, clientApi, stream) {
 					if (err) return cb(err);
 					clientApi._server = server;
+					clientApi.close = function() {
+						server.cleanup();
+						server.close();
+						stream.end();
+					};
 					cb(null, clientApi, stream);
 				});
 			});
@@ -60,6 +65,7 @@ exports.connect = function(port, cb) {
 	clientApi.pipe(mx.createStream('rpc')).pipe(clientApi);
 	clientApi._port = port;
 	clientApi._mx = mx;
+	clientApi.close = stream.end.bind(stream);
 	cb(null, clientApi, stream);
 };
 

@@ -24,9 +24,7 @@ module.exports = function(opts) {
 					t.equal(x + 1, y);
 					nCalls++;
 					if (nCalls == 3) {
-						client1._server.close();
-						client1._server.cleanup();
-						stream1.end();
+						client1.close();
 						t.end();
 					}
 				}
@@ -54,10 +52,8 @@ module.exports = function(opts) {
 						t.equal(x + 1, y);
 						nCalls++;
 						if (nCalls == 6) {
-							client1._server.close();
-							client1._server.cleanup();
-							stream1.end();
-							stream2.end();
+							client1.close();
+							client2.close();
 							t.end();
 						}
 					}
@@ -93,9 +89,7 @@ module.exports = function(opts) {
 				if (++ends !== 2) return;
 				t.equal(8, a);
 				t.equal(13, b);
-				client1._server.close();
-				client1._server.cleanup();
-				stream1.end();
+				client1.close();
 				t.end();
 			}
 		});
