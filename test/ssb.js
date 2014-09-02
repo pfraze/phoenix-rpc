@@ -188,8 +188,8 @@ module.exports = function(opts, opts2) {
 
 				var rpl1 = client1.createReplicationStream();
 				var rpl2 = client2.createReplicationStream();
-				rpl1.on('data', function(data) { console.log('rpl1', a2b2s(data)); });
-				rpl2.on('data', function(data) { console.log('rpl2', a2b2s(data)); });
+				rpl1.on('data', function(data) { console.log('rpl1', a2b2h(data)); });
+				rpl2.on('data', function(data) { console.log('rpl2', a2b2h(data)); });
 				rpl1.pipe(rpl2).pipe(rpl1);
 
 				rpl1.on('end', onEnd);
@@ -198,24 +198,25 @@ module.exports = function(opts, opts2) {
 				function onEnd() {
 					console.log('end');
 					if (++calls == 2) {
-						
-						var feeds = [];
-						var next = function(err, feed) {
-							if (err) throw err;
-							feeds.push(feed);
-							if (feeds.length == 2) {
-								t.deepEqual(feeds[0], feeds[1])
-								client1._server.cleanup();
-								client1._server.close();
-								stream1.end();
-								client2._server.cleanup();
-								client2._server.close();
-								stream2.end();
-								t.end();
+						setTimeout(function() {
+							var feeds = [];
+							var next = function(err, feed) {
+								if (err) throw err;
+								feeds.push(feed);
+								if (feeds.length == 2) {
+									t.deepEqual(feeds[0], feeds[1])
+									client1._server.cleanup();
+									client1._server.close();
+									stream1.end();
+									client2._server.cleanup();
+									client2._server.close();
+									stream2.end();
+									t.end();
+								}
 							}
-						}
-						pull(toPull(client1.createFeedStream()), pull.collect(next));
-				        pull(toPull(client2.createFeedStream()), pull.collect(next));
+							pull(toPull(client1.createFeedStream()), pull.collect(next));
+					        pull(toPull(client2.createFeedStream()), pull.collect(next));
+					    }, 300); // wait 300ms because the repl-stream 'end' doesnt tell us when our server has finished processing
 					}
 				}
 			});
