@@ -3,18 +3,17 @@ var tape = require('tape');
 var fs = require('fs');
 var path = require('path');
 
-function clearDatabase(opts) {
-	try {
-		fs.unlinkSync(path.join(opts.datadir, 'database'));
-		console.log('Deleted old database');
-	} catch (e) {}
+function clearDatadir(opts) {
+	try { fs.unlinkSync(path.join(opts.datadir, 'secret.name')); console.log('Deleted old keys'); } catch (e) {}
+	try { rimraf.sync(path.join(opts.datadir, 'database')); console.log('Deleted old db'); } catch (e) {}
+	try { fs.unlinkSync(path.join(opts.datadir, 'phoenix-rpc.port')); console.log('Deleted old portfile (if it existed)'); } catch (e) {}
 }
 
 module.exports = function(opts) {
 	tape('methods', function(t) {
 		var phoenixRpc = require('../');
 		
-		clearDatabase(opts);
+		clearDatadir(opts);
 
 		phoenixRpc.createServerOrConnect(opts, function(err, client, stream) {
 			if (err) throw err;
@@ -28,9 +27,9 @@ module.exports = function(opts) {
 				client.getNodes(function(err, nodes) {
 					if (err) throw err;
 					console.log('got nodes', nodes);
-					t.equal(nodes.length, 1);
-					t.equal(nodes[0][0], 'foo.com');
-					t.equal(nodes[0][1], 123);
+					t.equal(1, nodes.length);
+					t.equal('foo.com', nodes[0][0]);
+					t.equal(123, nodes[0][1]);
 
 					client.delNode('foo.com', 123, function(err) {
 						if (err) throw err;
@@ -39,7 +38,7 @@ module.exports = function(opts) {
 						client.getNodes(function(err, nodes) {
 							if (err) throw err;
 							console.log('got nodes', nodes);
-							t.equal(nodes.length, 0);
+							t.equal(0, nodes.length);
 
 							client._server.cleanup();
 							client._server.close();

@@ -3,7 +3,15 @@ var tape = require('tape');
 var debug = require('../lib/debug');
 debug.logging.mx = true;
 
+function clearDatadir(opts) {
+	try { fs.unlinkSync(path.join(opts.datadir, 'secret.name')); console.log('Deleted old keys'); } catch (e) {}
+	try { rimraf.sync(path.join(opts.datadir, 'database')); console.log('Deleted old db'); } catch (e) {}
+	try { fs.unlinkSync(path.join(opts.datadir, 'phoenix-rpc.port')); console.log('Deleted old portfile (if it existed)'); } catch (e) {}
+}
+
 module.exports = function(opts) {
+	clearDatadir(opts);
+	
 	tape('1 instance', function(t) {
 		var phoenixRpc = require('../');
 		phoenixRpc.createServerOrConnect(opts, function(err, client1, stream1) {
@@ -75,16 +83,16 @@ module.exports = function(opts) {
 			var a = 5, b = 10;
 			var psa = client1.pingStream(a);
 			var psb = client1.pingStream(b);
-			psa.on('data', function(chunk) { t.equal(+chunk, a); a++; });
-			psb.on('data', function(chunk) { t.equal(+chunk, b); b++; });
+			psa.on('data', function(chunk) { t.equal(a, +chunk); a++; });
+			psb.on('data', function(chunk) { t.equal(b, +chunk); b++; });
 
 			var ends = 0;
 			psa.on('end', onEnd);
 			psb.on('end', onEnd);
 			function onEnd() {
 				if (++ends !== 2) return;
-				t.equal(a, 8);
-				t.equal(b, 13);
+				t.equal(8, a);
+				t.equal(13, b);
 				client1._server.close();
 				client1._server.cleanup();
 				stream1.end();
