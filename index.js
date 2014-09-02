@@ -2,7 +2,7 @@ var path     = require('path');
 var fs       = require('fs');
 var net      = require('net');
 var rpc      = require('rpc-stream');
-var MuxDemux = require('mux-demux')
+var MuxDemux = require('mux-demux/msgpack')
 var api      = require('./lib/rpc-api');
 var debug    = require('./lib/debug');
 

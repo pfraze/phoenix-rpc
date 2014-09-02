@@ -7,6 +7,8 @@ var crypto   = require('crypto');
 var ecc      = require('eccjs');
 var k256     = ecc.curves.k256;
 var Blake2s  = require('blake2s');
+var pull = require('pull-stream')
+var toPull = require('stream-to-pull-stream')
 var debug = require('../lib/debug');
 debug.logging.mx = true;
 
@@ -53,14 +55,19 @@ module.exports = function(opts, opts2) {
 						if (err) throw err;
 						console.log('created second keys')
 
-						client._server.cleanup();
-						client._server.close();
-						stream.end();
+						client2.follow(new Buffer(keys.name), function(err) {
+							if (err) throw err;
+							console.log('keypair2 now following keypar1');
 
-						client2._server.cleanup();
-						client2._server.close();
-						stream.end();
-						t.end();
+							client._server.cleanup();
+							client._server.close();
+							stream.end();
+
+							client2._server.cleanup();
+							client2._server.close();
+							stream2.end();
+							t.end();
+						});
 					});
 				});
 			});
@@ -181,8 +188,8 @@ module.exports = function(opts, opts2) {
 
 				var rpl1 = client1.createReplicationStream();
 				var rpl2 = client2.createReplicationStream();
-				// rpl1.on('data', function(data) { console.log('rpl1', a2b2s(data)); });
-				// rpl2.on('data', function(data) { console.log('rpl2', a2b2s(data)); });
+				rpl1.on('data', function(data) { console.log('rpl1', a2b2s(data)); });
+				rpl2.on('data', function(data) { console.log('rpl2', a2b2s(data)); });
 				rpl1.pipe(rpl2).pipe(rpl1);
 
 				rpl1.on('end', onEnd);
@@ -191,14 +198,24 @@ module.exports = function(opts, opts2) {
 				function onEnd() {
 					console.log('end');
 					if (++calls == 2) {
-						client1._server.cleanup();
-						client1._server.close();
-						stream1.end();
-						client2._server.cleanup();
-						client2._server.close();
-						stream2.end();
-						t.end();
-
+						
+						var feeds = [];
+						var next = function(err, feed) {
+							if (err) throw err;
+							feeds.push(feed);
+							if (feeds.length == 2) {
+								t.deepEqual(feeds[0], feeds[1])
+								client1._server.cleanup();
+								client1._server.close();
+								stream1.end();
+								client2._server.cleanup();
+								client2._server.close();
+								stream2.end();
+								t.end();
+							}
+						}
+						pull(toPull(client1.createFeedStream()), pull.collect(next));
+				        pull(toPull(client2.createFeedStream()), pull.collect(next));
 					}
 				}
 			});

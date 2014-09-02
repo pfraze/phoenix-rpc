@@ -18,7 +18,8 @@
   "devDependencies": {
     "deep-equal": "^0.2.1",
     "tape": "~2.12.3",
-    "rimraf": "~2.2.8"
+    "rimraf": "~2.2.8",
+    "stream-to-pull-stream": "latest"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
