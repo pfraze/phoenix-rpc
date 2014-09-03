@@ -6,7 +6,6 @@ var path = require('path');
 function clearDatadir(opts) {
 	try { fs.unlinkSync(path.join(opts.datadir, 'secret.name')); console.log('Deleted old keys'); } catch (e) {}
 	try { rimraf.sync(path.join(opts.datadir, 'database')); console.log('Deleted old db'); } catch (e) {}
-	try { fs.unlinkSync(path.join(opts.datadir, 'phoenix-rpc.port')); console.log('Deleted old portfile (if it existed)'); } catch (e) {}
 }
 
 module.exports = function(opts) {
@@ -40,9 +39,7 @@ module.exports = function(opts) {
 							console.log('got nodes', nodes);
 							t.equal(0, nodes.length);
 
-							client._server.cleanup();
-							client._server.close();
-							stream.end();
+							client.close();
 							t.end();
 						});
 					});

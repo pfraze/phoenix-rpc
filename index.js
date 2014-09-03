@@ -9,12 +9,11 @@ var debug    = require('./lib/debug');
 function prepOpts(opts) {
 	if (!opts) throw "opts are required";
 	if (!opts.datadir) throw "opts.datadir is required";
+	if (!opts.port) opts.port = 64050;
 
 	// Build dependent values
 	if (!opts.namefile)
 		opts.namefile = path.join(opts.datadir, 'secret.name');
-	if (!opts.portfile)
-		opts.portfile = path.join(opts.datadir, 'phoenix-rpc.port');
 	if (!opts.dbpath)
 		opts.dbpath = path.join(opts.datadir, 'database');
 }
@@ -24,49 +23,48 @@ exports.createServerOrConnect = function(opts, cb) {
 
 	// Portfile exists?
 	var stream;
-	fs.exists(opts.portfile, function(exists) {
-		if (exists) {
-			// Read portfile and connect
-			fs.readFile(opts.portfile, {encoding: 'utf8'}, function(err, port) {
-				if (err)
-					return cb(new Error('Failed to read portfile ' + opts.portfile + ': ' + e.toString()));
-				exports.connect(+port, cb);
-			});
-		} else {
+	exports.connect(+opts.port, function(err, clientApi, stream) {
+		if (err) {
+			if (err.code != 'ECONNREFUSED') return cb(err);
+			console.log('moving on...')
 			// Create server and connect
-			exports.createServer(opts, function(err, server, port) {
+			exports.createServer(opts, function(err, server) {
 				if (err) return cb(err);
-				exports.connect(port, function(err, clientApi, stream) {
+				exports.connect(+opts.port, function(err, clientApi, stream) {
+					console.log('what?', err)
 					if (err) return cb(err);
 					clientApi._server = server;
 					clientApi.close = function() {
-						server.cleanup();
 						server.close();
 						stream.end();
 					};
 					cb(null, clientApi, stream);
 				});
 			});
+		} else {
+			cb(null, clientApi, stream);
 		}
 	});
 };
 
 exports.connect = function(port, cb) {
 	// Create stream
-	var stream = net.connect(port);
+	var stream = net.connect(port, function() {
+		console.log('connected', arguments);
 
-	// Pipe into mux-demux
-	var mx = MuxDemux();
-	stream.pipe(mx).pipe(stream);
+		// Pipe into mux-demux
+		var mx = MuxDemux();
+		stream.pipe(mx).pipe(stream);
 
-	// Create the rpc substream
-	debug.logMX('client, creating rpc substream over muxdemux');
-	var clientApi = api.createClient(rpc());
-	clientApi.pipe(mx.createStream('rpc')).pipe(clientApi);
-	clientApi._port = port;
-	clientApi._mx = mx;
-	clientApi.close = stream.end.bind(stream);
-	cb(null, clientApi, stream);
+		// Create the rpc substream
+		debug.logMX('client, creating rpc substream over muxdemux');
+		var clientApi = api.createClient(rpc());
+		clientApi.pipe(mx.createStream('rpc')).pipe(clientApi);
+		clientApi._mx = mx;
+		clientApi.close = stream.end.bind(stream);
+		cb(null, clientApi, stream);
+	});
+	stream.on('error', cb);
 };
 
 exports.createServer = function(opts, cb) {
@@ -92,32 +90,9 @@ exports.createServer = function(opts, cb) {
 			}
 		});
 	});
-
-	// Find an open port
-	var port = randomPort();
+	server.listen(+opts.port, 'localhost');
 	server.on('listening', function() {
-		// Port found, write portfile
-		fs.writeFile(opts.portfile, port, {encoding: 'utf8'}, function(err) {
-			if (err)
-				return cb(new Error('Failed to write portfile ' + opts.portfile + err.toString()));
-			// ...and go
-			cb(null, server, port);
-		});
+		cb(null, server);
 	});
-	server.on('error', function(err) {
-		if (e.code == 'EADDRINUSE') {
-			// Port in use, try again
-			port = randomPort();
-			server.listen(port);
-		}
-	});
-	server.listen(port, 'localhost');
-	function randomPort() {
-		return 64001 + Math.ceil(Math.random() * 998);
-	}
-
-	// Helper function, should be called on parent process' exit
-	server.cleanup = function(cb) {
-		fs.unlinkSync(opts.portfile);
-	};
+	server.on('error', cb);
 };

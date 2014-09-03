@@ -6,7 +6,6 @@ var path = require('path');
 function clearDatadir(opts) {
 	try { fs.unlinkSync(path.join(opts.datadir, 'secret.name')); console.log('Deleted old keys'); } catch (e) {}
 	try { rimraf.sync(path.join(opts.datadir, 'database')); console.log('Deleted old db'); } catch (e) {}
-	try { fs.unlinkSync(path.join(opts.datadir, 'phoenix-rpc.port')); console.log('Deleted old portfile (if it existed)'); } catch (e) {}
 }
 
 function b2h(arr) { return new Buffer(arr).toString('hex'); }
@@ -42,9 +41,7 @@ module.exports = function(opts) {
 					client.createKeys(false, function(err, keys) {
 						if (err) console.log('Didnt overwrite keys with force=false')
 						t.assert(!!err);
-						client._server.cleanup();
-						client._server.close();
-						stream.end();
+						client.close();
 						t.end();
 					});
 				});
@@ -79,9 +76,7 @@ module.exports = function(opts) {
 					t.assert(b2h(keys.name) == b2h(keys2.name));
 					t.assert(b2h(keys.public) == b2h(keys2.public));
 
-					client._server.cleanup();
-					client._server.close();
-					stream.end();
+					client.close();
 					t.end();
 				});
 			});

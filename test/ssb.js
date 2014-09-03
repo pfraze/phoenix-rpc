@@ -15,7 +15,6 @@ debug.logging.mx = true;
 function clearDatadir(opts) {
 	try { fs.unlinkSync(path.join(opts.datadir, 'secret.name')); console.log('Deleted old keys'); } catch (e) {}
 	try { rimraf.sync(path.join(opts.datadir, 'database')); console.log('Deleted old db'); } catch (e) {}
-	try { fs.unlinkSync(path.join(opts.datadir, 'phoenix-rpc.port')); console.log('Deleted old portfile (if it existed)'); } catch (e) {}
 }
 
 function a2b2h(arr) { return new Buffer(arr).toString('hex'); }
@@ -59,13 +58,8 @@ module.exports = function(opts, opts2) {
 							if (err) throw err;
 							console.log('keypair2 now following keypar1');
 
-							client._server.cleanup();
-							client._server.close();
-							stream.end();
-
-							client2._server.cleanup();
-							client2._server.close();
-							stream2.end();
+							client.close();
+							client2.close();
 							t.end();
 						});
 					});
@@ -101,9 +95,7 @@ module.exports = function(opts, opts2) {
 					.on('end', function() {
 						t.equal(4, calls);
 
-						client._server.cleanup();
-						client._server.close();
-						stream.end();
+						client.close();
 						t.end();
 					});
 			}
@@ -142,9 +134,7 @@ module.exports = function(opts, opts2) {
 							t.assert(other !== a2b2h(entry.key));
 						})
 						f.on('end', function() {
-							client._server.cleanup();
-							client._server.close();
-							stream.end();
+							client.close();
 							t.end();
 						});
 					})
@@ -169,9 +159,7 @@ module.exports = function(opts, opts2) {
 				console.log(a2b2s(v.type), a2b2s(v.message));
 			});
 			ls.on('end', function() {
-				client._server.cleanup();
-				client._server.close();
-				stream.end();
+				client.close();
 				t.end();
 			});
 		});
@@ -205,12 +193,8 @@ module.exports = function(opts, opts2) {
 								feeds.push(feed);
 								if (feeds.length == 2) {
 									t.deepEqual(feeds[0], feeds[1])
-									client1._server.cleanup();
-									client1._server.close();
-									stream1.end();
-									client2._server.cleanup();
-									client2._server.close();
-									stream2.end();
+									client1.close();
+									client2.close();
 									t.end();
 								}
 							}
@@ -225,4 +209,4 @@ module.exports = function(opts, opts2) {
 };
 
 if(!module.parent)
-	module.exports({ datadir: __dirname + '/.data' }, { datadir: __dirname + '/.data2' });
+	module.exports({ datadir: __dirname + '/.data', port: 64050 }, { datadir: __dirname + '/.data2', port: 64051 });
