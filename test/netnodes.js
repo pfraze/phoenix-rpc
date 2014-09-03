@@ -10,38 +10,36 @@ function clearDatadir(opts) {
 
 module.exports = function(opts) {
 	tape('methods', function(t) {
-		var phoenixRpc = require('../');
-		
 		clearDatadir(opts);
-
-		phoenixRpc.createServerOrConnect(opts, function(err, client, stream) {
+		var phoenixRpc = require('../');
+		var server = phoenixRpc.server(opts);
+		var client = phoenixRpc.client();
+		client.pipe(server).pipe(client);
+	
+		console.log('adding node');
+		client.api.addNode('foo.com', 123, function(err) {
 			if (err) throw err;
-			console.log('started at', client._port);
-
-			console.log('adding node');
-			client.addNode('foo.com', 123, function(err) {
+			console.log('added foo.com:123');
+			
+			client.api.getNodes(function(err, nodes) {
 				if (err) throw err;
-				console.log('added foo.com:123');
-				
-				client.getNodes(function(err, nodes) {
+				console.log('got nodes', nodes);
+				t.equal(1, nodes.length);
+				t.equal('foo.com', nodes[0][0]);
+				t.equal(123, nodes[0][1]);
+
+				client.api.delNode('foo.com', 123, function(err) {
 					if (err) throw err;
-					console.log('got nodes', nodes);
-					t.equal(1, nodes.length);
-					t.equal('foo.com', nodes[0][0]);
-					t.equal(123, nodes[0][1]);
-
-					client.delNode('foo.com', 123, function(err) {
+					console.log('deleted foo.com:123');
+					
+					client.api.getNodes(function(err, nodes) {
 						if (err) throw err;
-						console.log('deleted foo.com:123');
-						
-						client.getNodes(function(err, nodes) {
-							if (err) throw err;
-							console.log('got nodes', nodes);
-							t.equal(0, nodes.length);
+						console.log('got nodes', nodes);
+						t.equal(0, nodes.length);
 
-							client.close();
-							t.end();
-						});
+						client.end();
+						server.end();
+						t.end();
 					});
 				});
 			});
