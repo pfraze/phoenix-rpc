@@ -1,5 +1,7 @@
 # Phoenix API Server
 
+![phoenix-rpc](phoenix-rpc.png)
+
 Backend server to the [Phoenix Distributed Social-Network](https://github.com/pfraze/phoenix). Provides the backend API over a RPC stream, allowing multiple simultaneous frontends and clients.
 
 
