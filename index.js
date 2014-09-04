@@ -3,6 +3,7 @@ var fs       = require('fs');
 var net      = require('net');
 var rpc      = require('rpc-stream');
 var MuxDemux = require('mux-demux/msgpack')
+var mps      = require('msgpack-stream')
 var api      = require('./lib/rpc-api');
 var debug    = require('./lib/debug');
 
@@ -20,8 +21,12 @@ function prepOpts(opts) {
 exports.client = function() {
 	var mx = MuxDemux();
 	debug.logMX('client, creating rpc substream over muxdemux');
-	var clientApi = api.createClient(rpc(), mx);
-	clientApi.pipe(mx.createStream('rpc')).pipe(clientApi);
+	var clientApi = api.createClient(rpc(null, {raw:true}), mx);
+	clientApi
+		.pipe(mps.createEncodeStream())
+		.pipe(mx.createStream('rpc'))
+		.pipe(mps.createDecodeStream())
+		.pipe(clientApi);
 	mx.api = clientApi;
 	return mx;
 };
@@ -37,8 +42,12 @@ exports.server = function(opts) {
 		if (stream.meta == 'rpc') {
 			// RPC substream
 			debug.logMX('server, received rpc substream over muxdemux');
-			var rpcstream = rpc(serverApi);
-			rpcstream.pipe(stream).pipe(rpcstream);
+			var rpcstream = rpc(serverApi, {raw:true});
+			rpcstream
+				.pipe(mps.createEncodeStream())
+				.pipe(stream)
+				.pipe(mps.createDecodeStream())
+				.pipe(rpcstream);
 		} else {
 			// Others
 			serverApi.onStream(stream);

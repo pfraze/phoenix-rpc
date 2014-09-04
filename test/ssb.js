@@ -17,8 +17,8 @@ function clearDatadir(opts) {
 	try { rimraf.sync(path.join(opts.datadir, 'database')); console.log('Deleted old db'); } catch (e) {}
 }
 
-function a2b2h(arr) { return new Buffer(arr).toString('hex'); }
-function a2b2s(arr) { return new Buffer(arr).toString('utf8'); }
+function b2h(buff) { return buff.toString('hex'); }
+function b2s(buff) { return buff.toString('utf8'); }
 function bsum (value) {
 	return new Blake2s().update(value).digest()
 }
@@ -42,8 +42,8 @@ module.exports = function(opts, opts2) {
 		client.api.createKeys(true, function(err, keys) {
 			if (err) throw err;
 			console.log('Created keys');
-			console.log('Name', a2b2h(keys.name));
-			console.log('Public', a2b2h(keys.public));
+			console.log('Name', b2h(keys.name));
+			console.log('Public', b2h(keys.public));
 			t.assert(keys.exist);
 			t.assert(!!keys.name);
 			t.assert(!!keys.public);
@@ -82,9 +82,9 @@ module.exports = function(opts, opts2) {
 				.on('data', function(msg) {
 					++calls;
 					t.equal(calls, +msg.sequence);
-					t.equal(a2b2h(_keys.name), a2b2h(msg.author));
+					t.equal(b2h(_keys.name), b2h(msg.author));
 					if (calls > 1)
-						console.log(msg.sequence, a2b2s(msg.message));
+						console.log(msg.sequence, b2s(msg.message));
 				})
 				.on('end', function() {
 					t.equal(4, calls);
@@ -98,10 +98,10 @@ module.exports = function(opts, opts2) {
 		var client = phoenixRpc.client();
 		client.pipe(server).pipe(client);
 
-		client.api.getPublicKey(a2b2h(_keys.name), function(err, pubkey) {
+		client.api.getPublicKey(_keys.name, function(err, pubkey) {
 			if (err) throw err
 
-			t.equal(a2b2h(_keys.public), a2b2h(pubkey))
+			t.equal(b2h(_keys.public), b2h(pubkey))
 			t.end()
 		})
 	})
@@ -121,9 +121,9 @@ module.exports = function(opts, opts2) {
 			var n = 0;
 			var f = client.api.following();
 			f.on('data', function(entry) {
-				var name = a2b2h(entry.key);
+				var name = b2h(entry.key);
 				console.log('following', name);
-				if (other == name || a2b2h(_keys.name) == name)
+				if (other == name || b2h(_keys.name) == name)
 					n++
 			})
 			f.on('end', function() {
@@ -135,7 +135,7 @@ module.exports = function(opts, opts2) {
 					console.log('unfollowed', other);
 					var f = client.api.following()
 					f.on('data', function(entry) {
-						t.assert(other !== a2b2h(entry.key));
+						t.assert(other !== b2h(entry.key));
 					})
 					f.on('end', function() {
 						t.end();
@@ -155,10 +155,10 @@ module.exports = function(opts, opts2) {
 		ls.on('data', function(entry) {
 			var v = entry.value;
 			if (v.sequence == 1)
-				t.equal('init', a2b2s(v.type));
+				t.equal('init', b2s(v.type));
 			else if (v.sequence <= 4)
-				t.equal('text', a2b2s(v.type));
-			console.log(a2b2s(v.type), a2b2s(v.message));
+				t.equal('text', b2s(v.type));
+			console.log(b2s(v.type), b2s(v.message));
 		});
 		ls.on('end', function() {
 			t.end();
@@ -176,8 +176,8 @@ module.exports = function(opts, opts2) {
 
 		var rpl1 = client1.api.createReplicationStream();
 		var rpl2 = client2.api.createReplicationStream();
-		rpl1.on('data', function(data) { console.log('rpl1', a2b2h(data)); });
-		rpl2.on('data', function(data) { console.log('rpl2', a2b2h(data)); });
+		rpl1.on('data', function(data) { console.log('rpl1', b2h(data)); });
+		rpl2.on('data', function(data) { console.log('rpl2', b2h(data)); });
 		rpl1.pipe(rpl2).pipe(rpl1);
 
 		rpl1.on('end', onEnd);

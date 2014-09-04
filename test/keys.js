@@ -8,7 +8,7 @@ function clearDatadir(opts) {
 	try { rimraf.sync(path.join(opts.datadir, 'database')); console.log('Deleted old db'); } catch (e) {}
 }
 
-function a2b2h(arr) { return new Buffer(arr).toString('hex'); }
+function b2h(buff) { return buff.toString('hex'); }
 
 module.exports = function(opts) {
 	tape('create', function(t) {
@@ -21,8 +21,8 @@ module.exports = function(opts) {
 		client.api.createKeys(false, function(err, keys) {
 			if (err) throw err;
 			console.log('Created keys');
-			console.log('Name', a2b2h(keys.name));
-			console.log('Public', a2b2h(keys.public));
+			console.log('Name', b2h(keys.name));
+			console.log('Public', b2h(keys.public));
 			t.assert(keys.exist);
 			t.assert(!!keys.name);
 			t.assert(!!keys.public);
@@ -30,8 +30,8 @@ module.exports = function(opts) {
 			client.api.createKeys(true, function(err, keys) {
 				if (err) throw err;
 				console.log('Created keys 2');
-				console.log('Name', a2b2h(keys.name));
-				console.log('Public', a2b2h(keys.public));
+				console.log('Name', b2h(keys.name));
+				console.log('Public', b2h(keys.public));
 				t.assert(keys.exist);
 				t.assert(!!keys.name);
 				t.assert(!!keys.public);
@@ -55,8 +55,8 @@ module.exports = function(opts) {
 		client.api.createKeys(false, function(err, keys) {
 			if (err) throw err;
 			console.log('Created keys');
-			console.log('Name', a2b2h(keys.name));
-			console.log('Public', a2b2h(keys.public));
+			console.log('Name', b2h(keys.name));
+			console.log('Public', b2h(keys.public));
 			t.assert(keys.exist);
 			t.assert(!!keys.name);
 			t.assert(!!keys.public);
@@ -64,11 +64,11 @@ module.exports = function(opts) {
 			client.api.getKeys(function(err, keys2) {
 				if (err) throw err;
 				console.log('Got keys');
-				console.log('Name', a2b2h(keys2.name));
-				console.log('Public', a2b2h(keys2.public));
+				console.log('Name', b2h(keys2.name));
+				console.log('Public', b2h(keys2.public));
 				t.assert(keys2.exist);
-				t.assert(a2b2h(keys.name) == a2b2h(keys2.name));
-				t.assert(a2b2h(keys.public) == a2b2h(keys2.public));
+				t.assert(b2h(keys.name) == b2h(keys2.name));
+				t.assert(b2h(keys.public) == b2h(keys2.public));
 				t.end();
 			});
 		});

@@ -15,7 +15,8 @@
     "rpc-stream": "~2.1.1",
     "proquint-": "~1.1.0",
     "mux-demux": "~3.7.9",
-    "through": "~2.3.4"
+    "through": "~2.3.4",
+    "msgpack-stream": "~0.0.12"
   },
   "devDependencies": {
     "deep-equal": "^0.2.1",
