@@ -42,6 +42,7 @@ client.api.addNode('baz.com', 1000, function(err) {
 // Wrappers around SSB. NOTE:
 // - these return node's streams, not domenic's pull-streams. Use stream-to-pull-stream to convert them
 // - unlike ssb, only supports 1 local feed
+client.api.getPublicKey(id, cp);
 client.api.createFeedStream(opts);
 client.api.following();	
 client.api.follow(pubkey, cb);

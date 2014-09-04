@@ -93,6 +93,19 @@ module.exports = function(opts, opts2) {
 		}
 	});
 
+	tape('get public key', function(t) {
+		var server = phoenixRpc.server(opts);
+		var client = phoenixRpc.client();
+		client.pipe(server).pipe(client);
+
+		client.api.getPublicKey(a2b2h(_keys.name), function(err, pubkey) {
+			if (err) throw err
+
+			t.equal(a2b2h(_keys.public), a2b2h(pubkey))
+			t.end()
+		})
+	})
+
 	tape('follow, following, unfollow', function(t) {
 		var server = phoenixRpc.server(opts);
 		var client = phoenixRpc.client();
