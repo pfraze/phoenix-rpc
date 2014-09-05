@@ -50,7 +50,34 @@ exports.server = function(opts) {
 				.pipe(rpcstream);
 		} else {
 			// Others
+			debug.logMX('server, received streamcall', stream.meta);
 			serverApi.onStream(stream);
+		}
+	});
+
+	return mx;
+};
+
+exports.proxy = function(upstreamApi, allowedMethods) {
+	
+	var proxyApi = api.createProxy(upstreamApi, allowedMethods);
+	var mx = MuxDemux();
+
+	// Handle new substreams
+	mx.on('connection', function(stream) {
+		if (stream.meta == 'rpc') {
+			// RPC substream
+			debug.logMX('proxy, received rpc substream over muxdemux');
+			var rpcstream = rpc(proxyApi, {raw:true});
+			rpcstream
+				.pipe(mps.createEncodeStream())
+				.pipe(stream)
+				.pipe(mps.createDecodeStream())
+				.pipe(rpcstream);
+		} else {
+			// Others
+			debug.logMX('proxy, received streamcall', stream.meta);
+			proxyApi.onStream(stream)
 		}
 	});
 	

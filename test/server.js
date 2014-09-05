@@ -91,6 +91,37 @@ module.exports = function(opts) {
 			t.end();
 		}
 	});
+
+	tape('proxy', function(t) {
+		var phoenixRpc = require('../');
+		var server = phoenixRpc.server(opts);
+		var client1 = phoenixRpc.client();
+		client1.pipe(server).pipe(client1);
+
+		var proxy = phoenixRpc.proxy(client1.api, ['ping', 'pingStream'])
+		var client2 = phoenixRpc.client();
+		client2.pipe(proxy).pipe(client2);
+
+		console.log('pinging proxy with 1')
+		client2.api.ping(1, function(err, x) {
+			if (err) throw err
+
+			console.log('ponged', x)
+			t.equal(x, 2)
+
+			console.log('pingstreaming proxy with', x)
+			client2.api.pingStream(x)
+				.on('data', function(chunk) { t.equal(x++, +chunk); console.log('pongstreamed', chunk) })
+				.on('end', function() {
+					console.log('getKeys on proxy (not allowed)')
+					client2.api.getKeys(function(err, keys) {
+						console.log(err, keys)
+						t.assert(!!err)
+						t.end()
+					})
+				})
+		});
+	});
 };
 
 if(!module.parent)
