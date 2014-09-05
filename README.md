@@ -52,6 +52,17 @@ client.api.unfollow(pubkey, cb);
 client.api.addMessage(type, message, cb);
 client.api.createLogStream(opts);
 client.api.createReplicationStream(opts); // :NOTE: does not currently support the 'end' callback
+
+// Create a proxy that only allows the ping method
+var proxy = prpc.proxy(client, ['ping']);
+var client2 = prpc.client();
+client2.pipe(proxy).pipe(client2);
+client2.api.ping(1, function(err, x) {
+	console.log(x); // => 2
+});
+client2.api.getKeys(function(err, keys) {
+	console.log(err) // => [Error: Not allowed]
+});
 ```
 
 ### Why the RPC?
