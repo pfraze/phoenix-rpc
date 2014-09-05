@@ -27,6 +27,12 @@ client.api.createKeys(false, function(err, keys) {
 	if (err) throw err;
 	console.log(keys.public.toString('hex'));
 	console.log(keys.name.toString('hex'));
+
+	var buff = new Buffer('this was definitely written by bob')
+	client.api.sign(buff, function(err, sig) {
+		client.api.verify(buff, sig, keys.public, function(err, verified) {
+			console.log(verified); // => true
+		});
 });
 
 // Manage the network table
