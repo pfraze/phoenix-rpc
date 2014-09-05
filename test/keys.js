@@ -73,6 +73,38 @@ module.exports = function(opts) {
 			});
 		});
 	});
+
+	tape('sign and verify', function(t) {
+		clearDatadir(opts);
+		var phoenixRpc = require('../');
+		var server = phoenixRpc.server(opts);
+		var client = phoenixRpc.client();
+		client.pipe(server).pipe(client);		
+
+		client.api.createKeys(false, function(err, keys) {
+			if (err) throw err;
+			console.log('Created keys');
+			console.log('Name', b2h(keys.name));
+			console.log('Public', b2h(keys.public));
+			t.assert(keys.exist);
+			t.assert(!!keys.name);
+			t.assert(!!keys.public);
+
+			var buff = new Buffer('this came from bob');
+
+			client.api.sign(buff, function(err, sig) {
+				if (err) throw err;
+				console.log('Got signature', sig.toString('hex'));
+				t.assert(!!sig)
+				client.api.verify(buff, sig, false, function(err, verified) {
+					if (err) throw err
+					t.assert(verified)
+					console.log('verified')
+					t.end()
+				})
+			});
+		});
+	});
 };
 
 if(!module.parent)
