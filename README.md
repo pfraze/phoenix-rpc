@@ -57,6 +57,7 @@ client.api.follow(pubkey, cb);
 client.api.unfollow(pubkey, cb);
 client.api.addMessage(type, message, cb);
 client.api.createLogStream(opts);
+client.api.createHistoryStream(id, seq, live)
 client.api.createReplicationStream(opts); // :NOTE: does not currently support the 'end' callback
 
 // Create a proxy that only allows the ping method
