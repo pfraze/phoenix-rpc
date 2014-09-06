@@ -165,6 +165,26 @@ module.exports = function(opts, opts2) {
 		});
 	});
 
+	tape('createHistoryStream', function(t) {
+		var server = phoenixRpc.server(opts);
+		var client = phoenixRpc.client();
+		client.pipe(server).pipe(client);
+
+		var calls = 0;
+		var ls = client.api.createHistoryStream(_keys.public)
+		ls.on('data', function(entry) {
+			var v = entry.value;
+			if (v.sequence == 1)
+				t.equal('init', b2s(v.type));
+			else if (v.sequence <= 4)
+				t.equal('text', b2s(v.type));
+			console.log(b2s(v.type), b2s(v.message));
+		});
+		ls.on('end', function() {
+			t.end();
+		});
+	});
+
 	tape('createReplicationStream', function(t) {
 		var server1 = phoenixRpc.server(opts);
 		var client1 = phoenixRpc.client();
