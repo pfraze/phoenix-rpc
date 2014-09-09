@@ -46,6 +46,9 @@ client.api.addNode('baz.com', 1000, function(err) {
 		if (err) throw err;
 	});
 });
+client.api.addNodes(['foo.com', ['baz.com', 1000], 'bar.com:123'], function(err) {
+	if (err) throw err;
+})
 
 // Wrappers around SSB. NOTE:
 // - these return node's streams, not domenic's pull-streams. Use stream-to-pull-stream to convert them
