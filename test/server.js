@@ -117,7 +117,17 @@ module.exports = function(opts) {
 					client2.api.getKeys(function(err, keys) {
 						console.log(err, keys)
 						t.assert(!!err)
-						t.end()
+						console.log('createFeedStream on proxy (not allowed)')
+						var stream = client2.api.createFeedStream()
+						stream.on('error', function(err) {
+							console.log(err)
+							t.assert(!!err)
+							t.end()
+						})
+						stream.on('end', function() {
+							console.log('createFeedStream emitted data when it should have failed')
+							t.assert(false)
+						})
 					})
 				})
 		});
