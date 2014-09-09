@@ -1,12 +1,12 @@
   {
   "name": "phoenix-rpc",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Core phoenix APIs hosted in an RPC server to allow multiple frontends.",
   "dependencies": {
     "level": "~0.18.0",
     "level-sublevel": "~6.3.8",
     "secure-scuttlebutt": "latest",
-    "eccjs": "git://github.com/dominictarr/eccjs.git#586f6d47507184a2efe84684ed0a30605cbc43a5",
+    "eccjs": "git://github.com/dominictarr/eccjs.git#9202b6566f203ff55504f241fc87837eb7549c46",
     "blake2s": "~1.0.0",
     "pull-stream": "~2.24.1",
     "bytewise": "~0.7.0",
