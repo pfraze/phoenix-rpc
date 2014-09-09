@@ -57,6 +57,16 @@ client.api.syncNetwork({ timeout: 3000 }, function(err, results) {
 		else
 			console.log(host, 'synced in', results[host].elapsed, 'ms')
 	}
+
+	client.api.getSyncState(function(err, state) {
+		if (err) throw err
+		console.log('Last synced on', new Date(sync.lastSync))
+		client.api.syncNetwork({ ifOlderThan: 1000*60 }, function(err, results) {
+			if (err) throw err
+			if (Object.keys(results).length == 0)
+				console.log('Synced within the last 60s, not syncing again')
+		})
+	})
 })
 
 // Wrappers around SSB. NOTE:
