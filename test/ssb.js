@@ -217,8 +217,8 @@ module.exports = function(opts, opts2) {
 						}
 					}
 					pull(toPull(client1.api.createFeedStream()), pull.collect(next));
-			        pull(toPull(client2.api.createFeedStream()), pull.collect(next));
-			    }, 300); // wait 300ms because the repl-stream 'end' doesnt tell us when our server has finished processing
+					pull(toPull(client2.api.createFeedStream()), pull.collect(next));
+				}, 300); // wait 300ms because the repl-stream 'end' doesnt tell us when our server has finished processing
 			}
 		}
 	});
