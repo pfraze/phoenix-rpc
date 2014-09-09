@@ -126,8 +126,13 @@ module.exports = function(opts, opts2) {
 									feeds.push(feed);
 									if (feeds.length == 2) {
 										t.deepEqual(feeds[0], feeds[1]);
-										server.close()
-										t.end();
+
+										console.log('testing ifOlderThan')
+										client1.api.syncNetwork({ ifOlderThan: 1000*60 }, function(err, results) {
+											t.equal(Object.keys(results).length, 0)
+											server.close()
+											t.end();
+										})
 									}
 								}
 								pull(toPull(client1.api.createFeedStream()), pull.collect(next));
