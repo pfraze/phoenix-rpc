@@ -87,11 +87,11 @@ module.exports = function(opts, opts2) {
 						if (++n < 2) return
 
 						console.log('syncing')
-						client1.api.syncNetwork(function(err) {
+						client1.api.syncNetwork(function(err, results) {
 							if (err) throw err
 
 							setTimeout(function() {
-								console.log('synced, comparing feeds')
+								console.log('synced, comparing feeds', results)
 								var feeds = [];
 								var next = function(err, feed) {
 									if (err) throw err;
