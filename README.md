@@ -49,6 +49,15 @@ client.api.addNode('baz.com', 1000, function(err) {
 client.api.addNodes(['foo.com', ['baz.com', 1000], 'bar.com:123'], function(err) {
 	if (err) throw err;
 })
+client.api.syncNetwork({ timeout: 3000 }, function(err, results) {
+	if (err) throw err;
+	for (var host in results) {
+		if (results[host].error)
+			console.error(host, 'failed to sync', results[host].msg)
+		else
+			console.log(host, 'synced in', results[host].elapsed, 'ms')
+	}
+})
 
 // Wrappers around SSB. NOTE:
 // - these return node's streams, not domenic's pull-streams. Use stream-to-pull-stream to convert them
