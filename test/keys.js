@@ -2,6 +2,7 @@
 var tape = require('tape');
 var fs = require('fs');
 var path = require('path');
+var rimraf = require('rimraf');
 
 function clearDatadir(opts) {
 	try { fs.unlinkSync(path.join(opts.datadir, 'secret.name')); console.log('Deleted old keys'); } catch (e) {}
