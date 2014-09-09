@@ -51,6 +51,32 @@ module.exports = function(opts, opts2) {
 		});
 	});
 
+	tape('addNodes', function(t) {
+		var phoenixRpc = require('../');
+		var server = phoenixRpc.server(opts);
+		var client = phoenixRpc.client();
+		client.pipe(server).pipe(client);
+	
+		console.log('adding nodes');
+		client.api.addNodes([['foo.com', 123], 'bar.com:456', 'baz.com'], function(err) {
+			if (err) throw err;
+			console.log('added foo.com:123, bar.com:456, baz.com');
+			
+			client.api.getNodes(function(err, nodes) {
+				if (err) throw err;
+				console.log('got nodes', nodes);
+				t.equal(nodes.length, 3);
+				t.equal(nodes[0][0], 'bar.com');
+				t.equal(nodes[0][1], 456);
+				t.equal(nodes[1][0], 'baz.com');
+				t.equal(nodes[1][1], 64000);
+				t.equal(nodes[2][0], 'foo.com');
+				t.equal(nodes[2][1], 123);
+				t.end();
+			});
+		});
+	});
+
 	tape('sync', function(t) {
 		var phoenixRpc = require('../');
 		var client1 = phoenixRpc.client();
@@ -87,11 +113,13 @@ module.exports = function(opts, opts2) {
 						if (++n < 2) return
 
 						console.log('syncing')
-						client1.api.syncNetwork(function(err, results) {
+						client1.api.syncNetwork({ timeout: 500 }, function(err, results) {
 							if (err) throw err
+							console.log('synced, comparing feeds')
+							for (var k in results)
+								console.log(k, results[k])
 
 							setTimeout(function() {
-								console.log('synced, comparing feeds', results)
 								var feeds = [];
 								var next = function(err, feed) {
 									if (err) throw err;
@@ -138,34 +166,6 @@ module.exports = function(opts, opts2) {
 			})
 		}
 	})
-
-	tape('addNodes', function(t) {
-		var phoenixRpc = require('../');
-		var server = phoenixRpc.server(opts);
-		var client = phoenixRpc.client();
-		client.pipe(server).pipe(client);
-	
-		console.log('adding nodes');
-		client.api.addNodes([['foo.com', 123], 'bar.com:456', 'baz.com'], function(err) {
-			if (err) throw err;
-			console.log('added foo.com:123, bar.com:456, baz.com');
-			
-			client.api.getNodes(function(err, nodes) {
-				if (err) throw err;
-				console.log('got nodes', nodes);
-				t.equal(nodes.length, 4);
-				t.equal(nodes[0][0], 'bar.com');
-				t.equal(nodes[0][1], 456);
-				t.equal(nodes[1][0], 'baz.com');
-				t.equal(nodes[1][1], 64000);
-				t.equal(nodes[2][0], 'foo.com');
-				t.equal(nodes[2][1], 123);
-				t.equal(nodes[3][0], 'localhost');
-				t.equal(nodes[3][1], 63999);
-				t.end();
-			});
-		});
-	});
 };
 
 if(!module.parent)
