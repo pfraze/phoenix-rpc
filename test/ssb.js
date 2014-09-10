@@ -106,7 +106,7 @@ module.exports = function(opts, opts2) {
 		})
 	})
 
-	tape('follow, following, unfollow', function(t) {
+	tape('follow, following, isFollowing, unfollow', function(t) {
 		var server = phoenixRpc.server(opts);
 		var client = phoenixRpc.client();
 		client.pipe(server).pipe(client);
@@ -118,28 +118,33 @@ module.exports = function(opts, opts2) {
 			if (err) throw err;
 
 			console.log('followed', other);
-			var n = 0;
-			var f = client.api.following();
-			f.on('data', function(entry) {
-				var name = b2h(entry.key);
-				console.log('following', name);
-				if (other == name || b2h(_keys.name) == name)
-					n++
-			})
-			f.on('end', function() {
-				if (n !== 2)
-					throw "not following everybody that's expected";
-				client.api.unfollow(other, function(err) {
-					if (err) throw err;
-					
-					console.log('unfollowed', other);
-					var f = client.api.following()
-					f.on('data', function(entry) {
-						t.assert(other !== b2h(entry.key));
+			client.api.isFollowing(other, function(err, v) {
+				t.assert(!err)
+				console.log('checked, is following', other)
+
+				var n = 0;
+				var f = client.api.following();
+				f.on('data', function(entry) {
+					var name = b2h(entry.key);
+					console.log('following', name);
+					if (other == name || b2h(_keys.name) == name)
+						n++
+				})
+				f.on('end', function() {
+					if (n !== 2)
+						throw "not following everybody that's expected";
+					client.api.unfollow(other, function(err) {
+						if (err) throw err;
+						
+						console.log('unfollowed', other);
+						var f = client.api.following()
+						f.on('data', function(entry) {
+							t.assert(other !== b2h(entry.key));
+						})
+						f.on('end', function() {
+							t.end();
+						});
 					})
-					f.on('end', function() {
-						t.end();
-					});
 				})
 			})
 		});
