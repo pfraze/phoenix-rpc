@@ -75,8 +75,9 @@ client.api.syncNetwork({ timeout: 3000 }, function(err, results) {
 client.api.getPublicKey(id, cp);
 client.api.createFeedStream(opts);
 client.api.following();	
-client.api.follow(pubkey, cb);
-client.api.unfollow(pubkey, cb);
+client.api.follow(id, cb);
+client.api.unfollow(id, cb);
+client.api.isFollowing(id, cb);
 client.api.addMessage(type, message, cb);
 client.api.createLogStream(opts);
 client.api.createHistoryStream(id, seq, live)
