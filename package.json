@@ -1,6 +1,6 @@
   {
   "name": "phoenix-rpc",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "description": "Core phoenix APIs hosted in an RPC server to allow multiple frontends.",
   "dependencies": {
     "level": "~0.18.0",
